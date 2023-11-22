@@ -1,0 +1,16 @@
+#!/bin/bash
+OLDPATH=$(pwd)
+cd ./sw/webapps-priority
+WEBAPPSDIR=$(pwd)
+rm -f cordra.war
+
+cd ./cordra
+CORDRADIR=$(pwd)
+
+jar -cvf cordra.war *
+if test -f "cordra.war"; then
+    mv $CORDRADIR/cordra.war $WEBAPPSDIR
+fi
+
+cd $OLDPATH
+exec "`dirname "$0"`"/bin/startup
