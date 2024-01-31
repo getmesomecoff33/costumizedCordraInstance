@@ -2,7 +2,6 @@ const cordra = require('cordra');
 const cordraUtil = require('cordraUtil');
 
 let providerPublicKey = null;
-
 exports.authenticate = authenticate;
 
 function authenticate(authInfo, context) {
@@ -40,7 +39,7 @@ function isJwtFromProvider(token) {
 function checkCredentials(authInfo) {
     const token = authInfo.token;
     const payload = cordraUtil.extractJwtPayload(token);
-    const isVerified = true;
+    const isVerified = cordraUtil.verifyWithKey(token, providerPublicKey);
     const claimsCheck = checkClaims(payload);
     const active = isVerified && claimsCheck;
     const result = {
@@ -105,13 +104,13 @@ function checkAudience(audElement) {
     return true
 }
 
-function cacheKeyIfNeeded() {
-    if (!providerPublicKey) {
+function cacheKeyIfNeeded(){
+    if(!providerPublicKey){
+        providerPublicKey = cordraUtil.getCordraPublicKey();
         const configDir = getDataDir();
         const File = Java.type('java.io.File');
-        const keyPath = configDir + File.separator + "publicKey.jwk";
-        providerPublicKey =  cordraUtil.getCordraPublicKey()
-        return true
+        const keyPath = configDir + File.separator + "googleJWT.json";
+        providerPublicKey.n = getPublicKey(keyPath);
     }
 }
 
@@ -121,14 +120,16 @@ function getDataDir() {
     return cordraDataDir;
 }
 
+
 function readFileToString(pathToFile) {
     const path = Java.type('java.nio.file.Paths').get(pathToFile);
     const string = Java.type('java.nio.file.Files').readString(path);
     return string;
 }
 
-function readFileToJsonAndParse(pathToFile) {
+function getPublicKey(pathToFile){
     const jsonString = readFileToString(pathToFile);
     const result = JSON.parse(jsonString);
-    return result;
+    const key0 = result.keys[0];
+    return key0.n;
 }
